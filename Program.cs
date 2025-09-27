@@ -15,6 +15,11 @@ public class RssItem
     public DateTime PubDate { get; set; }
     public string? Author { get; set; }
     public string? Category { get; set; }
+
+    public override string ToString()
+    {
+        return $"RssItem {{ Id = {Id}, Title = \"{Title}\", Description = \"{Description}\", Link = \"{Link}\", PubDate = {PubDate}, Author = \"{Author}\", Category = \"{Category}\" }}";
+    }
 }
 
 // Database context
@@ -37,8 +42,8 @@ public class RssDbContext : DbContext
             entity.Property(e => e.Title).IsRequired().HasMaxLength(1000);
             entity.Property(e => e.Description).HasMaxLength(5000);
             entity.Property(e => e.Link).IsRequired().HasMaxLength(2000);
-            entity.Property(e => e.Author).HasMaxLength(500);
-            entity.Property(e => e.Category).HasMaxLength(250);
+            entity.Property(e => e.Author).IsRequired().HasMaxLength(500);
+            entity.Property(e => e.Category).IsRequired().HasMaxLength(250);
             // Configure PubDate to use UTC
             entity.Property(e => e.PubDate).HasColumnType("timestamp with time zone");
             
@@ -57,10 +62,7 @@ class Program
 
         try
         {
-            // First check database schema
-            await CheckDatabaseSchema();
-            
-            // Fetch and store RSS data
+               // Fetch and store RSS data
             await FetchAndStoreRssData();
         }
         catch (Exception ex)
@@ -72,23 +74,6 @@ class Program
 
         Console.WriteLine("Press any key to exit...");
         Console.ReadKey();
-    }
-
-    static async Task CheckDatabaseSchema()
-    {
-        Console.WriteLine("Checking database schema...");
-        try
-        {
-            using (var context = new RssDbContext())
-            {
-                var columns = await context.Database.SqlQueryRaw<string>("SELECT column_name FROM information_schema.columns WHERE table_name = 'rss_items'").ToListAsync();
-                Console.WriteLine($"Columns in rss_items table: {string.Join(", ", columns)}");
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error checking schema: {ex.Message}");
-        }
     }
 
     static async Task FetchAndStoreRssData()
@@ -113,17 +98,6 @@ class Program
         {
             try
             {
-                // Check if table exists and recreate if needed
-                await RecreateTableIfNecessary(context);
-                
-                // Ensure database is created and migrations are applied
-                await context.Database.EnsureCreatedAsync();
-                
-                // Apply any pending migrations
-                await context.Database.MigrateAsync();
-
-                // Clear existing data (optional)
-                await context.RssItems.ExecuteDeleteAsync();
 
                 // Add new items
                 foreach (var item in rssItems)
@@ -131,10 +105,11 @@ class Program
                     // Convert to UTC before saving
                     item.PubDate = DateTime.SpecifyKind(item.PubDate, DateTimeKind.Utc);
                     context.RssItems.Add(item);
+                    Console.WriteLine($"Data - {item}");
                 }
 
                 Console.WriteLine("Try to store");
-                await context.SaveChangesAsync();
+                context.SaveChanges();
                 Console.WriteLine($"Successfully stored {rssItems.Count} items to database.");
             }
             catch (DbUpdateException dbue)
@@ -142,17 +117,6 @@ class Program
                 Console.WriteLine($"Error: {dbue.Message}");
                 if (dbue.InnerException != null)
                     Console.WriteLine($"Inner Exception: {dbue.InnerException.Message}");
-                // Log the full exception for debugging
-                Console.WriteLine($"Full exception: {dbue}");
-                
-                // Additional debug information - Check schema
-                Console.WriteLine("Database schema check:");
-                var columns = await context.Database.SqlQueryRaw<string>("SELECT column_name FROM information_schema.columns WHERE table_name = 'rss_items'").ToListAsync();
-                Console.WriteLine($"Columns in rss_items table: {string.Join(", ", columns)}");
-                
-                // Also try to check if table exists
-                var tableExists = await context.Database.SqlQueryRaw<int>("SELECT 1 FROM information_schema.tables WHERE table_name = 'rss_items'").ToListAsync();
-                Console.WriteLine($"Table rss_items exists: {tableExists.Any()}");
             }
             catch (Exception ex)
             {
@@ -160,48 +124,6 @@ class Program
                 if (ex.InnerException != null)
                     Console.WriteLine($"Inner Exception: {ex.InnerException.Message}");
             }
-        }
-    }
-
-    static async Task RecreateTableIfNecessary(RssDbContext context)
-    {
-        try
-        {
-            // Check if table exists and has the right columns
-            var tableExists = await context.Database.SqlQueryRaw<int>("SELECT 1 FROM information_schema.tables WHERE table_name = 'rss_items'").ToListAsync();
-            
-            if (tableExists.Any())
-            {
-                Console.WriteLine("Table rss_items exists. Checking schema...");
-                
-                // Check if Author column exists
-                var authorColumnExists = await context.Database.SqlQueryRaw<int>("SELECT 1 FROM information_schema.columns WHERE table_name = 'rss_items' AND column_name = 'author'").ToListAsync();
-                
-                if (!authorColumnExists.Any())
-                {
-                    Console.WriteLine("Author column missing. Recreating table...");
-                    // Drop and recreate the table
-                    await context.Database.ExecuteSqlRawAsync("DROP TABLE IF EXISTS rss_items");
-                    await context.Database.ExecuteSqlRawAsync(
-                        "CREATE TABLE rss_items (id SERIAL PRIMARY KEY, title VARCHAR(1000) NOT NULL, description TEXT, link VARCHAR(2000) NOT NULL, pub_date TIMESTAMP WITH TIME ZONE NOT NULL, author VARCHAR(500), category VARCHAR(250))");
-                    Console.WriteLine("Table recreated with correct schema.");
-                }
-                else
-                {
-                    Console.WriteLine("Table exists and has Author column.");
-                }
-            }
-            else
-            {
-                Console.WriteLine("Table rss_items does not exist. Creating new table...");
-                await context.Database.ExecuteSqlRawAsync(
-                    "CREATE TABLE rss_items (id SERIAL PRIMARY KEY, title VARCHAR(1000) NOT NULL, description TEXT, link VARCHAR(2000) NOT NULL, pub_date TIMESTAMP WITH TIME ZONE NOT NULL, author VARCHAR(500), category VARCHAR(250))");
-                Console.WriteLine("Table created with correct schema.");
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error in RecreateTableIfNecessary: {ex.Message}");
         }
     }
 
@@ -249,12 +171,12 @@ class Program
             {
                 var rssItem = new RssItem
                 {
-                    Title = item.Element("title")?.Value,
-                    Description = item.Element("description")?.Value,
-                    Link = item.Element("link")?.Value,
+                    Title = item.Element("title")?.Value ?? "",
+                    Description = item.Element("description")?.Value ?? "",
+                    Link = item.Element("link")?.Value ?? "",
                     PubDate = ParseDateTime(item.Element("pubDate")?.Value ?? ""),
-                    Author = item.Element("author")?.Value,
-                    Category = item.Element("category")?.Value
+                    Author = item.Element("author")?.Value ?? "Fuck",
+                    Category = item.Element("category")?.Value ?? ""
                 };
                 
                 items.Add(rssItem);

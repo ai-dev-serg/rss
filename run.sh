@@ -1,18 +1,17 @@
 #!/bin/bash
 
-echo "Setting up RSS Feed Application..."
+echo "Starting RSS Feed Application..."
 
-# Build and run with Docker Compose
-echo "Building and starting services..."
-docker-compose up -d
+# Make sure we're in the right directory
+cd /C/fast_docker_projects/cursor/rss
 
-echo "Waiting for PostgreSQL to be ready..."
-sleep 10
+# Restore NuGet packages
+dotnet restore
 
-echo "Running the RSS feed application..."
-docker-compose run rss-app
+# Build the project
+dotnet build
 
-echo "Cleaning up..."
-docker-compose down
+# Run the application
+dotnet run
 
-echo "Done!"
+echo "Application finished."

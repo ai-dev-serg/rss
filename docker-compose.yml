@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   postgres:
-    image: postgres:13
+    image: postgres:latest
     environment:
       POSTGRES_DB: rssdb
       POSTGRES_USER: postgres

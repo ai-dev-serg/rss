@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("RssFeedApp")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+bcf50179eaa2826f2026275f2339de3a4599c9a4")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+bcf1237bece199f67a3676f275fa26edb2769fb0")]
 [assembly: System.Reflection.AssemblyProductAttribute("RssFeedApp")]
 [assembly: System.Reflection.AssemblyTitleAttribute("RssFeedApp")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -1,80 +1,46 @@
-# RSS Feed to PostgreSQL Database Application
+# RSS Feed to Database Application
 
-This is a simple C# console application that fetches RSS feed data from https://alexablockchain.com/feed/ and stores it in a PostgreSQL database using Entity Framework Core.
+This application fetches RSS feeds and stores them in a PostgreSQL database.
 
-## Prerequisites
+## Problem Description
 
-1. .NET 9.0 SDK
-2. PostgreSQL database server
-3. A database named `rssdb` (or modify the connection string accordingly)
+The error occurs when trying to save data to the `rss_items` table because the `Author` column doesn't exist in the database, even though:
+1. The C# model includes an `Author` property
+2. The Entity Framework configuration maps this property to the database
+3. The SQL script creates the table with an `author` column
 
-## Setup Instructions
+## Solution
 
-### 1. Database Setup
+I've implemented several fixes in the code:
 
-First, make sure you have PostgreSQL installed and running. Then create a database:
+1. **Schema validation**: Added checks to verify the database schema before attempting to save data
+2. **Automatic table recreation**: If the table is missing or incomplete, it will be recreated with the correct schema
+3. **Enhanced error reporting**: More detailed debugging information when errors occur
 
-```sql
-CREATE DATABASE rssdb;
-```
+## How to Run
 
-You may also need to create a user with appropriate permissions:
-```sql
-CREATE USER rssuser WITH PASSWORD 'yourpassword';
-GRANT ALL PRIVILEGES ON DATABASE rssdb TO rssuser;
-```
+1. Ensure PostgreSQL is running
+2. Make sure your database credentials are correct in `Program.cs`
+3. Run the application using:
+   ```bash
+   dotnet run
+   ```
+   
+   Or use the provided script:
+   ```bash
+   ./run.sh
+   ```
 
-### 2. Update Connection String
+## Database Setup
 
-In `Program.cs`, update the connection string in the `OnConfiguring` method:
+The application expects a PostgreSQL database named `rssdb` with a user `postgres` and the default password.
 
-```csharp
-optionsBuilder.UseNpgsql("Host=localhost;Database=rssdb;Username=postgres;Password=yourpassword");
-```
+## Troubleshooting
 
-Replace with your actual PostgreSQL credentials.
-
-### 3. Build and Run
-
-Navigate to the project directory and run:
-
-```bash
-cd /C/fast_docker_projects/cursor/rss-ef-core-app
-dotnet build
-dotnet run
-```
-
-## Application Features
-
-- Fetches RSS feed from alexablockchain.com
-- Parses XML feed data
-- Stores items in PostgreSQL database using Entity Framework Core
-- Handles basic error cases
-- Automatically creates the database schema if it doesn't exist
-
-## Database Schema
-
-The application creates a table `RssItems` with the following columns:
-- Id (Primary Key)
-- Title
-- Description
-- Link
-- PubDate
-- Author
-- Category
-
-## Project Structure
-
-```
-/rss-ef-core-app/
-├── Program.cs          # Main application code
-├── RssFeedApp.csproj   # Project file
-└── README.md           # This file
-```
-
-## Dependencies
-
-This project uses:
-- Microsoft.EntityFrameworkCore (9.0.9)
-- Npgsql.EntityFrameworkCore.PostgreSQL (9.0.9)
-- System.Xml.ReaderWriter (4.3.1)
+If you continue to see errors:
+1. Check that your PostgreSQL server is running
+2. Verify database connection details in `Program.cs`
+3. Manually verify the table structure using:
+   ```sql
+   SELECT column_name FROM information_schema.columns WHERE table_name = 'rss_items';
+   ```

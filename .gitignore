@@ -1,0 +1,43 @@
+# Build results
+[bin/
+[obj/
+
+# Visual Studio 2015+ cache/options
+.vs/
+
+# Visual Studio 2017+ cache/options
+.vscode/
+
+# User-specific files
+*.user
+*.vspscc
+
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+build/
+[Bb]in/
+[Oo]bj/
+
+# Visual Studio 2019 cache
+*.cache
+
+# Mac OS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Node.js
+node_modules/
+npm-debug.log
+
+# IDE
+.idea/
+.vs/
+*.swp
+*.swo
+
+# Docker
+.dockerignore

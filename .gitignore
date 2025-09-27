@@ -1,6 +1,6 @@
 # Build results
-[bin/
-[obj/
+bin/
+obj/
 
 # Visual Studio 2015+ cache/options
 .vs/

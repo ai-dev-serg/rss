@@ -12,12 +12,5 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
-  rss-app:
-    build: .
-    depends_on:
-      - postgres
-    environment:
-      - ConnectionStrings__DefaultConnection=Host=postgres;Database=rssdb;Username=postgres;Password=yourpassword
-
 volumes:
   postgres_data:

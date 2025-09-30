@@ -39,13 +39,19 @@ public class RssDbContext : DbContext
         modelBuilder.Entity<RssItem>(entity =>
         {
             entity.HasKey(e => e.Id);
-            entity.Property(e => e.Title).IsRequired().HasMaxLength(1000);
-            entity.Property(e => e.Description).HasMaxLength(5000);
-            entity.Property(e => e.Link).IsRequired().HasMaxLength(2000);
-            entity.Property(e => e.Author).IsRequired().HasMaxLength(500);
-            entity.Property(e => e.Category).IsRequired().HasMaxLength(250);
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Title).IsRequired().HasMaxLength(1000).HasColumnName("title");
+            entity.Property(e => e.Description).HasMaxLength(5000).HasColumnName("description");
+            entity.Property(e => e.Link).IsRequired().HasMaxLength(2000).HasColumnName("link");
+            entity.Property(e => e.Author).IsRequired().HasMaxLength(500).HasColumnName("author");
+            entity.Property(e => e.Category).IsRequired().HasMaxLength(250).HasColumnName("category");
             // Configure PubDate to use UTC
-            entity.Property(e => e.PubDate).HasColumnType("timestamp with time zone");
+            entity.Property(e => e.PubDate).HasColumnType("timestamp with time zone").HasColumnName("pub_date");
+            
+            // Add composite unique constraint on Title, Category, and Author
+            entity.HasIndex(e => new { e.Title, e.Category, e.Author })
+                  .IsUnique()
+                  .HasDatabaseName("uk_rss_items_title_category_author");
             
             // Map to the actual database table name
             entity.ToTable("rss_items");
@@ -79,7 +85,7 @@ class Program
     static async Task FetchAndStoreRssData()
     {
         // Fetch RSS feed from the provided URL
-        var rssUrl = "https://alexablockchain.com/feed/";
+        var rssUrl = "https://cryptobreaking.com/feed/";
         Console.WriteLine($"Fetching RSS feed from: {rssUrl}");
         
         var rssFeed = await FetchRssFeed(rssUrl);
@@ -175,7 +181,7 @@ class Program
                     Description = item.Element("description")?.Value ?? "",
                     Link = item.Element("link")?.Value ?? "",
                     PubDate = ParseDateTime(item.Element("pubDate")?.Value ?? ""),
-                    Author = item.Element("author")?.Value ?? "Fuck",
+                    Author = item.Element("author")?.Value ?? "",
                     Category = item.Element("category")?.Value ?? ""
                 };
                 

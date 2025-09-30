@@ -6,7 +6,8 @@ CREATE TABLE IF NOT EXISTS rss_items (
     link VARCHAR(2000) NOT NULL,
     pub_date TIMESTAMP WITH TIME ZONE NOT NULL,
     author VARCHAR(500),
-    category VARCHAR(250)
+    category VARCHAR(250),
+    CONSTRAINT uk_rss_items_title_category_author UNIQUE (title, category, author)
 );
 
 -- Create indexes for better query performance
